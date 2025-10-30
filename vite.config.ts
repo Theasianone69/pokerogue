@@ -3,7 +3,18 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { minifyJsonPlugin } from "./src/plugins/vite/vite-minify-json-plugin";
 
 export const defaultConfig: UserConfig = {
+  // --- START OF IFRAME & PLUGINS FIX ---
+  // 1. IFRAME FIX: Add headers to allow embedding
+  server: {
+    headers: {
+      "X-Frame-Options": "ALLOWALL",
+      "Content-Security-Policy": "frame-ancestors '*'",
+    },
+  },
+  // 2. DEPENDENCY FIX: Enable plugins to resolve "#app/polyfills"
   plugins: [tsconfigPaths(), minifyJsonPlugin(["images", "battle-anims"], true)],
+  // --- END OF IFRAME & PLUGINS FIX ---
+
   clearScreen: false,
   appType: "mpa",
   build: {
@@ -32,8 +43,11 @@ export default defineConfig(({ mode }) => {
       pure: mode === "production" ? ["console.log"] : [],
       keepNames: true,
     },
+    // This server block is correctly merging port from defaultConfig/env
     server: {
       port: !Number.isNaN(envPort) ? envPort : 8000,
+      // The headers from defaultConfig will be used, but if you wanted to keep this
+      // as clean as possible, you could also define the 'headers' block here instead.
     },
   };
 });
